@@ -1,0 +1,244 @@
+{
+  "source": "https://turney0524.github.io/point-groups.html",
+  "crystalSystems": 7,
+  "groupCount": 32,
+  "operationCount": 332,
+  "complexIrrepCount": 175,
+  "productsChecked": 6330,
+  "representationProductsChecked": 51860,
+  "checks": [
+    "generator closure",
+    "operation matrices",
+    "animation endpoints",
+    "conjugacy classes",
+    "representation homomorphism",
+    "character orthogonality",
+    "physical decompositions"
+  ],
+  "groups": [
+    {
+      "symbol": "C1",
+      "order": 1,
+      "classes": 1,
+      "complexIrreps": 1,
+      "passed": true
+    },
+    {
+      "symbol": "Ci",
+      "order": 2,
+      "classes": 2,
+      "complexIrreps": 2,
+      "passed": true
+    },
+    {
+      "symbol": "C2",
+      "order": 2,
+      "classes": 2,
+      "complexIrreps": 2,
+      "passed": true
+    },
+    {
+      "symbol": "Cs",
+      "order": 2,
+      "classes": 2,
+      "complexIrreps": 2,
+      "passed": true
+    },
+    {
+      "symbol": "C2h",
+      "order": 4,
+      "classes": 4,
+      "complexIrreps": 4,
+      "passed": true
+    },
+    {
+      "symbol": "D2",
+      "order": 4,
+      "classes": 4,
+      "complexIrreps": 4,
+      "passed": true
+    },
+    {
+      "symbol": "C2v",
+      "order": 4,
+      "classes": 4,
+      "complexIrreps": 4,
+      "passed": true
+    },
+    {
+      "symbol": "D2h",
+      "order": 8,
+      "classes": 8,
+      "complexIrreps": 8,
+      "passed": true
+    },
+    {
+      "symbol": "C4",
+      "order": 4,
+      "classes": 4,
+      "complexIrreps": 4,
+      "passed": true
+    },
+    {
+      "symbol": "S4",
+      "order": 4,
+      "classes": 4,
+      "complexIrreps": 4,
+      "passed": true
+    },
+    {
+      "symbol": "C4h",
+      "order": 8,
+      "classes": 8,
+      "complexIrreps": 8,
+      "passed": true
+    },
+    {
+      "symbol": "D4",
+      "order": 8,
+      "classes": 5,
+      "complexIrreps": 5,
+      "passed": true
+    },
+    {
+      "symbol": "C4v",
+      "order": 8,
+      "classes": 5,
+      "complexIrreps": 5,
+      "passed": true
+    },
+    {
+      "symbol": "D2d",
+      "order": 8,
+      "classes": 5,
+      "complexIrreps": 5,
+      "passed": true
+    },
+    {
+      "symbol": "D4h",
+      "order": 16,
+      "classes": 10,
+      "complexIrreps": 10,
+      "passed": true
+    },
+    {
+      "symbol": "C3",
+      "order": 3,
+      "classes": 3,
+      "complexIrreps": 3,
+      "passed": true
+    },
+    {
+      "symbol": "C3i",
+      "order": 6,
+      "classes": 6,
+      "complexIrreps": 6,
+      "passed": true
+    },
+    {
+      "symbol": "D3",
+      "order": 6,
+      "classes": 3,
+      "complexIrreps": 3,
+      "passed": true
+    },
+    {
+      "symbol": "C3v",
+      "order": 6,
+      "classes": 3,
+      "complexIrreps": 3,
+      "passed": true
+    },
+    {
+      "symbol": "D3d",
+      "order": 12,
+      "classes": 6,
+      "complexIrreps": 6,
+      "passed": true
+    },
+    {
+      "symbol": "C6",
+      "order": 6,
+      "classes": 6,
+      "complexIrreps": 6,
+      "passed": true
+    },
+    {
+      "symbol": "C3h",
+      "order": 6,
+      "classes": 6,
+      "complexIrreps": 6,
+      "passed": true
+    },
+    {
+      "symbol": "C6h",
+      "order": 12,
+      "classes": 12,
+      "complexIrreps": 12,
+      "passed": true
+    },
+    {
+      "symbol": "D6",
+      "order": 12,
+      "classes": 6,
+      "complexIrreps": 6,
+      "passed": true
+    },
+    {
+      "symbol": "C6v",
+      "order": 12,
+      "classes": 6,
+      "complexIrreps": 6,
+      "passed": true
+    },
+    {
+      "symbol": "D3h",
+      "order": 12,
+      "classes": 6,
+      "complexIrreps": 6,
+      "passed": true
+    },
+    {
+      "symbol": "D6h",
+      "order": 24,
+      "classes": 12,
+      "complexIrreps": 12,
+      "passed": true
+    },
+    {
+      "symbol": "T",
+      "order": 12,
+      "classes": 4,
+      "complexIrreps": 4,
+      "passed": true
+    },
+    {
+      "symbol": "Th",
+      "order": 24,
+      "classes": 8,
+      "complexIrreps": 8,
+      "passed": true
+    },
+    {
+      "symbol": "O",
+      "order": 24,
+      "classes": 5,
+      "complexIrreps": 5,
+      "passed": true
+    },
+    {
+      "symbol": "Td",
+      "order": 24,
+      "classes": 5,
+      "complexIrreps": 5,
+      "passed": true
+    },
+    {
+      "symbol": "Oh",
+      "order": 48,
+      "classes": 10,
+      "complexIrreps": 10,
+      "passed": true
+    }
+  ]
+}
