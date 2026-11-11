@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0b2550">
+  <meta name="description" content="北航物理群论学习站。交互探索 32 个晶体点群、对称操作、表示矩阵、特征标与凝聚态应用。">
+  <title>北航物理-群论研究-朱建震</title>
+  <link rel="icon" href="assets/beihang.jpg">
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="assets/groups.js"></script>
+  <script defer src="scene.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body id="home">
+  <a class="skip" href="#explorer">跳转至点群实验台</a>
+  <header class="masthead">
+    <div class="container mast-inner">
+      <a class="brand" href="#home">
+        <img src="assets/beihang.jpg" alt="北京航空航天大学校徽" width="46" height="46">
+        <span><strong>北航物理-群论研究-朱建震</strong><small>BEIHANG PHYSICS / GROUP THEORY</small></span>
+      </a>
+      <nav class="main-nav" aria-label="主导航">
+        <a class="current" href="#explorer">点群实验台</a>
+        <a href="#notebook">学习笔记</a>
+        <a href="#all-tables">点群速查</a>
+        <a href="#sources">参考资料</a>
+      </nav>
+      <a class="institution" href="https://physics.buaa.edu.cn/" target="_blank" rel="noopener">北航物理学院 <span aria-hidden="true">↗</span></a>
+    </div>
+  </header>
+  <main>
+    <section class="hero" aria-labelledby="page-title">
+      <div class="container hero-inner">
+        <div class="hero-copy">
+          <p class="eyebrow"><span></span> CRYSTAL SYMMETRY & REPRESENTATION THEORY</p>
+          <h1 id="page-title">晶体点群<br><em>交互图谱</em></h1>
+          <p class="hero-description">从三维对称操作出发，读懂生成元、共轭类与特征标。<br class="wide-break">用群表示连接晶体结构、光谱选择定则与凝聚态响应。</p>
+          <div class="hero-actions"><a class="button white" href="#explorer">开始探索 <span aria-hidden="true">↓</span></a><a class="button outline" href="#notebook">阅读学习笔记 <span aria-hidden="true">↗</span></a></div>
+        </div>
+        <figure class="hero-figure">
+          <canvas id="hero-model" role="img" aria-label="立方体及其四重旋转轴的空间示意"></canvas>
+          <figcaption><span><b>O<sub>h</sub></b> / 立方对称</span><span class="caption-meta">四重旋转轴 C<sub>4</sub></span></figcaption>
+        </figure>
+      </div>
+    </section>
+    <div class="stats"><div class="container stat-inner">
+      <div><b>32</b><span>晶体点群<small>CRYSTAL CLASSES</small></span></div>
+      <div><b>7</b><span>晶系<small>CRYSTAL SYSTEMS</small></span></div>
+      <div><b>332</b><span>群元素<small>GROUP ELEMENTS</small></span></div>
+      <div><b>175</b><span>复不可约表示<small>COMPLEX IRREPS</small></span></div>
+    </div></div>
+    <section class="container section" id="explorer" aria-labelledby="explorer-title">
+      <header class="section-heading"><div><p class="eyebrow"><span></span> INTERACTIVE LAB</p><h2 id="explorer-title">点群实验台</h2></div><p>选择一个点群，再点击右侧的生成元或对称操作。</p></header>
+      <div class="workspace">
+        <aside class="group-sidebar card">
+          <h3>点群目录 <small id="search-count">32</small></h3>
+          <label class="sr-only" for="group-search">搜索点群符号</label>
+          <input id="group-search" type="search" placeholder="搜索 C3v、3m、立方…" autocomplete="off">
+          <label class="sr-only" for="system-filter">按晶系筛选</label>
+          <select id="system-filter"><option value="">全部晶系</option></select>
+          <nav id="group-list" aria-label="32 个点群"></nav>
+          <p class="sidebar-note">Schönflies 与 Hermann–Mauguin 符号并列显示。</p>
+        </aside>
+        <div class="work-body">
+          <header class="group-header">
+            <div><p class="eyebrow" id="group-system">三方晶系</p><h3 id="group-title">C<sub>3v</sub> <span>3m</span></h3><p id="group-description"></p></div>
+            <div class="tags" id="group-badges"></div>
+          </header>
+          <div class="viewer-grid">
+            <section class="scene-panel card">
+              <div class="scene-bar"><strong><span class="scene-dot"></span> 三维对称操作</strong><div><button id="top-view" type="button">俯视 z</button><button id="reset-camera" type="button">重置视角</button></div></div>
+              <div class="canvas-wrap">
+                <canvas id="scene" tabindex="0" role="img" aria-label="可用方向键旋转的三维点群图"></canvas>
+                <p class="scene-note">拖动旋转 · 滚轮缩放 · P 为跟踪点</p>
+                <p id="operation-warning" class="scene-warning" hidden>反射与反演的过渡帧为非刚性插值，端点对应群操作。</p>
+              </div>
+              <div class="animation-controls">
+                <div class="control-buttons">
+                  <button id="play" type="button" class="button blue">重放本次</button>
+                  <button id="reset" type="button" class="button subtle">恢复初态</button>
+                  <label><input id="from-initial" type="checkbox"> 每次从初态</label>
+                  <label><input id="full-orbit" type="checkbox" checked> 完整轨道</label>
+                  <label><input id="show-reference" type="checkbox" checked> 参考轮廓</label>
+                </div>
+                <div class="scrub-row"><label for="scrub">演示进度</label><input id="scrub" type="range" min="0" max="1" step=".001" value="1"><output id="scrub-output" for="scrub">100%</output></div>
+                <div id="pose-result" class="pose-result"></div>
+              </div>
+            </section>
+            <section class="operation-panel card">
+              <header><h4>群元素</h4><small id="operation-count"></small></header>
+              <div class="generator-section"><p>生成元</p><div class="op-items" id="generator-buttons"></div></div>
+              <div id="operations" class="operations-scroll"></div>
+              <p id="operation-detail" class="operation-detail" aria-live="polite"></p>
+            </section>
+          </div>
+          <div class="info-grid">
+            <section class="card info-card"><h4>操作矩阵 <span id="operation-name" class="math"></span></h4><div class="matrix-pair"><span class="math">M(g) =</span><div id="operation-matrix"></div></div><p class="muted" id="operation-meta"></p></section>
+            <section class="card info-card"><h4>生成元与群闭包</h4><p id="generator-relations"></p><p class="muted">矩阵从右向左作用。连续操作时，新操作左乘当前姿态。</p><button type="button" id="download-group" class="button subtle">下载全部矩阵与表示 JSON ↓</button></section>
+          </div>
+          <details class="card folding" id="cayley"><summary>群乘法表 <small>选择一个单元格以演示乘积</small></summary><p class="muted">行对应左因子，列对应右因子。乘积以恒等姿态为起点播放。</p><div id="cayley-table" class="table-scroll"></div><p id="cayley-result" aria-live="polite"></p></details>
+          <section class="subsection" id="characters">
+            <header class="sub-heading"><div><h4>特征标表</h4><p>选择表示查看矩阵与基函数，点击列标题演示该类的代表元。</p></div><button type="button" id="download-csv" class="button subtle">导出 CSV ↓</button></header>
+            <div class="card table-scroll" id="character-table"></div>
+            <p class="muted" id="group-specific-note"></p>
+            <div class="card info-card irrep"><h4 id="irrep-title"></h4><p class="muted" id="irrep-meta"></p><div class="info-grid"><div class="matrix-pair"><span class="math">D(g) =</span><div id="irrep-matrix"></div></div><div id="basis-lists"></div></div><p class="muted">投影基采用数值约定。若某表示重复出现，列表给出整个等型分量的基。</p></div>
+          </section>
+          <section class="subsection" id="physics">
+            <header class="sub-heading"><div><h4>凝聚态物理应用</h4><p>比较极矢量、轴矢量和对称二阶张量在点群下的变换。</p></div></header>
+            <div class="physics-grid">
+              <div class="card info-card"><small>极矢量 · 位置与电极化</small><strong class="math" id="polar-decomp"></strong><p>普通电偶极算符 V。</p></div>
+              <div class="card info-card"><small>轴矢量 · 角动量与磁矩</small><strong class="math" id="axial-decomp"></strong><p>按 det(M)M 变换。</p></div>
+              <div class="card info-card"><small>对称二阶张量 · 极化率</small><strong class="math" id="quadratic-decomp"></strong><p>Sym²V 给出普通 Raman 通道。</p></div>
+            </div>
+            <div class="card response">
+              <div><b id="polar-dim"></b><span>极矢量不变量</span></div>
+              <div><b id="rank2-dim"></b><span>对称二阶极张量独立参数</span></div>
+              <div><b id="piezo-dim"></b><span>压电型张量不变量</span></div>
+            </div>
+            <div class="card info-card product"><h4>直积计算器</h4><p class="muted">分解表示直积，检查其中的全对称分量。</p><div class="product-controls"><label for="product-a">表示 Γ₁ <select id="product-a"></select></label><span aria-hidden="true">⊗</span><label for="product-b">表示 Γ₂ <select id="product-b"></select></label></div><div id="product-result" aria-live="polite"></div></div>
+          </section>
+          <details class="card folding source-fold"><summary>查看动画变换代码与数据文件</summary><pre id="source-code"></pre><p><a href="assets/groups.json">全部点群数据 JSON</a> · <a href="app.js">前端代码</a> · <a href="https://turney0524.github.io/assets/point-groups/source/build_data.py" target="_blank" rel="noopener">原站数据生成程序</a></p></details>
+        </div>
+      </div>
+    </section>
+    <section class="study-band" id="notebook">
+      <div class="container section">
+        <header class="section-heading"><div><p class="eyebrow"><span></span> STUDY NOTES</p><h2>从对称操作到物理应用</h2></div><a class="button subtle" href="notes.md" download>下载 Markdown 笔记 ↓</a></header>
+        <div class="study-layout">
+          <nav class="card contents" aria-label="笔记目录">
+            <strong>学习笔记</strong><a href="#notation">符号与晶系</a><a href="#actions">对称操作与生成元</a><a href="#representation">表示与共轭类</a><a href="#example">C₃ᵥ 分解实例</a><a href="#applications">凝聚态应用</a><a href="#quiz">自测</a><a href="#conventions">数据与坐标约定</a>
+          </nav>
+          <article class="card article">
+            <h3 id="notation">1. 两套点群符号</h3>
+            <p>Hermann–Mauguin 国际符号把旋转轴和镜面按晶体方向编码。Schönflies 符号强调点群的家族结构。例如 <span class="math">3m ↔ C<sub>3v</sub></span> 表示三重轴与垂直镜面，<span class="math">4/mmm ↔ D<sub>4h</sub></span> 则包含四重主轴、垂直于主轴的二重轴及水平镜面。</p>
+            <h4>为什么三维晶体只有 32 个点群？</h4>
+            <p>晶格旋转要在晶格基中用整矩阵表示，因此其迹 <span class="math">1 + 2 cos(2π/n)</span> 必须为整数。允许的旋转阶数为 1、2、3、4、6。再按闭包要求组合镜映、反演与旋转，得到七个晶系下的 32 种晶类。</p>
+            <h3 id="actions">2. 用标记点读对称操作</h3>
+            <p>取一般点 P，施加主动变换 <span class="math">P′ = M(g)P</span>。轨道点集在操作前后重合，单独跟踪 P 与它的局部坐标架就能看见置换。<span class="math">det M = +1</span> 保持空间定向，<span class="math">det M = −1</span> 反转定向。后者的可视化会经过非正交矩阵。</p>
+            <h3>3. 用生成元构造整个群</h3>
+            <p>从恒等操作 E 开始，不断左乘生成元，直到得不到新的矩阵。这一闭包给出全部群元素。以 C₃ᵥ 为例，取 <span class="math">a = C<sub>3</sub></span>、<span class="math">b = σ<sub>v</sub></span>，有 <span class="math">a³ = b² = E</span> 和 <span class="math">bab = a⁻¹</span>。在乘法表中对比 ab 与 ba，可直接检验这两个生成元是否交换。</p>
+            <h3 id="representation">4. 从空间变换到不可约表示</h3>
+            <p>对每个 g 指定一个矩阵 D(g)，使 <span class="math">D(gh) = D(g)D(h)</span>，便得到一个表示。空间坐标的 3×3 矩阵只是其中一种。函数、轨道或声子位移构成各自的表示空间，可以分解为不可约分量。</p>
+            <p>本页在复数域上列出不可约表示。C₃ 的两个非平凡一维表示在 C₃ 操作上的值分别为 <span class="math">ω</span> 和 <span class="math">ω̄</span>，其中 <span class="math">ω = e<sup>2πi/3</sup></span>。它们在实函数空间里可合并为二维块。表中 ¹ 和 ² 区分这两个复共轭伙伴。</p>
+            <h3>5. 按共轭类读取特征标表</h3>
+            <p>共轭操作 <span class="math">hgh⁻¹</span> 的表示矩阵与 <span class="math">D(g)</span> 相似，所以两者的迹相同。表中每列对应一个共轭类，列标题给出代表操作与类大小。E 列的值就是表示维数。可用行正交关系及 <span class="math">Σ d<sub>i</sub>² = |G|</span> 核对表格。</p>
+            <h3 id="example">6. C₃ᵥ 中分解极矢量</h3>
+            <p>三维坐标表示在 <span class="math">E、2C<sub>3</sub>、3σ<sub>v</sub></span> 上的特征标依次为 (3, 0, 1)。把它与每一行不可约特征标作加权内积，得到 <span class="math">V = A<sub>1</sub> ⊕ E</span>。z 属于 A₁，(x, y) 张成 E。</p>
+            <div class="formula math" aria-label="不可约表示重数公式">n<sub>α</sub> = (1 / |G|) ∑<sub>C</sub> |C| χ<sub>α</sub>(C)<sup>*</sup> χ<sub>V</sub>(C)</div>
+            <h3 id="applications">7. 五个凝聚态应用</h3>
+            <dl class="application-list">
+              <dt>极矢量与轴矢量</dt><dd>反演改变电极化的符号，磁矩经 det(M)M 变换而在反演下保持不变。</dd>
+              <dt>红外与 Raman</dt><dd>检查振动模所属表示是否出现在电偶极或极化率表示中。实际模的分析需要原子位点、3N 位移表示及声学支。</dd>
+              <dt>Neumann 原理与响应张量</dt><dd>晶体响应在点群操作下不变。在张量表示中投影到全对称子空间，可数出允许的独立参数。普通压电响应使用 V ⊗ Sym²V。</dd>
+              <dt>轨道劈裂、序参量与耦合</dt><dd>利用高对称表示在子群中的限制判断劈裂。候选耦合项若含全对称分量，再检查时间反演、微观机制与统计约束。</dd>
+              <dt>能带、波矢与自旋</dt><dd>从给定 k 的空间群小群出发。螺旋轴与滑移面中的分数平移可引入相位。考虑自旋轨道耦合时，采用双值表示，并单独处理时间反演等反幺正对称。</dd>
+            </dl>
+            <h3 id="quiz">8. 学习顺序与自测</h3>
+            <p>先用 C₃ᵥ 比较旋转与镜面，再观察 D₄ₕ 的反演奇偶。切换到 Oₕ 研究矢量与二次函数，最后用 C₃ 或 T 识别复共轭表示。</p>
+            <div class="quiz"><p id="quiz-question"></p><div id="quiz-options"></div><p id="quiz-feedback" aria-live="polite"></p><button class="button subtle" id="quiz-next" type="button">下一题 →</button></div>
+            <h3 id="conventions">9. 数据与坐标约定</h3>
+            <p>矩阵采用右手笛卡尔轴和主动变换，乘积右因子先作用。课堂坐标需变换后才能用于特定 CIF。g/u 标记反演奇偶，′/″ 标记指定水平镜面的奇偶。区分群的抽象结构、实际空间矩阵和其表示空间。</p>
+          </article>
+        </div>
+      </div>
+    </section>
+    <section class="container section appendix" id="all-tables">
+      <header class="section-heading"><div><p class="eyebrow"><span></span> CRYSTALLOGRAPHIC REFERENCE</p><h2>32 点群速查</h2></div><a class="button subtle" href="assets/groups.json" download>下载完整数据 ↓</a></header>
+      <p class="section-intro">按晶系浏览符号、群阶和生成元。展开任一点群可查阅完整复特征标。</p>
+      <div class="card table-scroll" id="reference-index"></div><div id="reference-tables" class="reference-tables"></div>
+    </section>
+    <section id="sources" class="resources">
+      <div class="container section">
+        <header class="section-heading"><div><p class="eyebrow"><span></span> REFERENCES & DATA</p><h2>参考资料</h2></div></header>
+        <ul class="source-links">
+          <li><a href="https://turney0524.github.io/point-groups.html">计算凝聚态物理 · 32 点群的动态展示 ↗</a><p>本网站的内容参考与数学数据来源。</p></li>
+          <li><a href="https://www.cryst.ehu.es/rep/point">Bilbao Crystallographic Server · Point Group Tables ↗</a><p>晶体点群符号、特征标和表示论工具。</p></li>
+          <li><a href="https://doi.org/10.1107/S0108767305040286">Aroyo 等 · 晶体学点群与空间群的表示 ↗</a><p>Acta Crystallographica A 62, 115–128 (2006)。</p></li>
+          <li><a href="https://www.iucr.org/what-we-do/education/pamphlets/symmetry">IUCr · Symmetry ↗</a><p>晶体对称元素与晶体学符号。</p></li>
+          <li><a href="https://gap-system.github.io/gap/doc/ref/chap71_mj.html">GAP · Character Tables ↗</a><p>特征标表与共轭类的计算参考。</p></li>
+          <li><a href="assets/validation.json">本网站数值校验结果 ↓</a><p>矩阵闭包、共轭类、表示同态、特征标正交性和物理分解。</p></li>
+        </ul>
+        <p class="related"><a href="https://turney0524.github.io/notes.html">原站知识笔记 ↗</a><a href="https://turney0524.github.io/collection-group-theory.html">原站群论合集 ↗</a><a href="https://dictionary.iucr.org/Piezoelectricity">IUCr 压电性 ↗</a><a href="https://www.buaa.edu.cn/xygk/jrbh/bhxh.htm">北航校徽来源 ↗</a><a href="https://physics.buaa.edu.cn/">学院标识来源 ↗</a></p>
+      </div>
+    </section>
+  </main>
+  <footer class="footer"><div class="container footer-inner">
+    <div><strong>北航物理-群论研究-朱建震</strong><p>个人学习与研究网站 · 晶体对称性与群表示</p></div>
+    <div class="footer-logos"><a href="https://physics.buaa.edu.cn/" aria-label="北京航空航天大学物理学院官网"><img src="assets/physics.png" alt="北京航空航天大学物理学院官网标识" width="290" height="40"></a></div>
+    <a href="#home" class="top-link">返回顶部 ↑</a>
+  </div></footer>
+  <noscript><p class="noscript">开启 JavaScript 后可以使用交互实验台与动态表格。学习笔记和参考资料仍可阅读。</p></noscript>
+</body>
+</html>
