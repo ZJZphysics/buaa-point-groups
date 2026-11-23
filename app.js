@@ -17,7 +17,7 @@
   const cameraDefault = {yaw: .76, elevation: .40, zoom: 1};
   const state = {
     group: null, operation: 0, irrep: 0, start: 0, target: 0,
-    progress: 1, playing: false, raf: 0, model: null, modelEdges: [], moved: 0, trackedSite: null,
+    progress: 1, playing: false, raf: 0, model: null, moved: 0, trackedSite: null, previewOperation: null,
     camera: {...cameraDefault}
   };
 
@@ -61,13 +61,14 @@
     }).join('') || '<p class="sidebar-note">没有匹配的点群。</p>';
     setText('#search-count', visible.length);
   }
+  let projectedSites=[];
   function draw() {
-    drawStructure(canvas,state,{labels:$('#show-sites').checked,reference:$('#show-reference').checked});
+    projectedSites=drawStructure(canvas,state,{labels:$('#show-sites').checked,reference:$('#show-reference').checked});
     const complete = state.progress >= 1;
     const op = state.group.operations[complete ? state.target : state.operation];
     $('#pose-result').innerHTML = '<strong>'+(complete?'当前姿态':'演示中')+'</strong> · '+operationName(op.name)+
       (complete?' · det = '+op.det+'<br><span class="muted">'+state.moved+' 个'+
-        (state.model.formula?'原子':'晶面')+'在本次操作中换位</span>':'');
+        (state.model.formula?'原子':'顶点')+'在本次操作中换位</span>':'');
     canvas.setAttribute('aria-label',state.model.name+'，'+state.group.symbol+'，'+op.name+'。方向键旋转视角。');
     $('#scrub').value = state.progress;
     setText('#scrub-output',Math.round(state.progress*100)+'%');
@@ -77,11 +78,15 @@
     state.playing = false;
   }
   function updateControls() {
-    setText('#play',state.playing?'暂停演示':state.progress<1?'继续演示':'重放本次');
+    setText('#play',state.playing?'暂停演示':state.progress<1?'继续演示':state.previewOperation?'播放预览':'重放本次');
     $$('[data-op],[data-class-op],[data-cayley-left]').forEach(button => { button.disabled = state.progress < 1; });
   }
   function play() {
     if (state.playing) { stop(); updateControls(); return; }
+    if (state.progress===1&&state.previewOperation) {
+      chooseOperation(state.previewOperation.id);
+      return;
+    }
     if (state.progress === 1) state.progress = 0;
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
       state.progress = 1;
@@ -130,13 +135,17 @@
   }
   function updateTrajectory() {
     const choice=$('#trajectory-site').value;
+    const {group,operation,start,model}=state;
+    const generators=group.generators.map(generator=>group.operations[generator.index]);
+    state.previewOperation=operation===0
+      ? (generators.find(op=>op.kind==='rotation')??generators[0]??null)
+      : null;
     if (choice==='off') {
       state.trackedSite=null;
-      setText('#trajectory-status','');
+      setText('#trajectory-status','轨迹已关闭。');
       return;
     }
-    const {group,operation,start,model}=state;
-    const op=group.operations[operation], base=group.operations[start].matrix;
+    const op=state.previewOperation??group.operations[operation], base=group.operations[start].matrix;
     const displacements=model.sites.map(site=>{
       const initial=transform(base,site.position);
       return distance(transform(op.matrix,initial),initial);
@@ -146,19 +155,20 @@
       ? (distanceMax>1e-7?displacements.indexOf(distanceMax):model.sites.findIndex(site=>Math.hypot(...site.position)>1e-7))
       : Number(choice);
     const index=state.trackedSite, label=siteLabel(model.sites[index],index);
-    let description='选择右侧操作，观察金色标记。';
+    let description='恒等操作，所选位置保持原位。';
     if (op.kind!=='identity') {
       if (displacements[index]<=1e-7) description='该位置在本次操作中保持不动。';
-      else if (op.kind==='rotation') description='绕旋转轴移动 '+real(Math.abs(op.angle)*180/Math.PI)+'°，金线随动画绘出。';
-      else if (op.kind==='improper') description='金线先画旋转圆弧，再沿镜面法向移动。';
-      else description='金线连接该位置在翻转前后的位置。';
+      else if (op.kind==='rotation') description='绕轴 '+real(Math.abs(op.angle)*180/Math.PI)+'°';
+      else if (op.kind==='improper') description='先旋转，再沿镜面法向翻转';
+      else description='翻转的直线路径';
     }
-    setText('#trajectory-status',label+' · '+description);
+    const preview=state.previewOperation?'预览 '+op.name+' · ':'';
+    setText('#trajectory-status',preview+label+' · '+description);
   }
 
   function updateOperation() {
     const g = state.group, op = g.operations[state.operation];
-    const positions=state.model.formula?state.model.sites.map(site=>site.position):state.model.planes.map(plane=>plane.n);
+    const positions=state.model.sites.map(site=>site.position);
     state.moved=positions.filter(p=>distance(transform(op.matrix,p),p)>1e-7).length;
     updateTrajectory();
     $('#operation-name').innerHTML = operationName(op.name);
@@ -277,14 +287,13 @@
     state.group = g;
     state.irrep = 0;
     state.model=modelFor(g);
-    state.modelEdges=modelEdges(state.model);
     const model=state.model;
     $('#trajectory-site').innerHTML='<option value="auto">自动选点</option><option value="off">关闭轨迹</option>'+
       model.sites.map((site,i)=>'<option value="'+i+'">'+siteLabel(site,i)+'</option>').join('');
     setText('#model-name',model.name+(model.formula?' · '+model.formula:''));
     setText('#model-type',model.category);
     setText('#model-description',model.description);
-    setText('#site-control-label',model.formula?'标注原子':'跟踪晶面');
+    setText('#site-control-label',model.formula?'显示原子编号':'显示顶点编号');
     $('#model-source').href=model.source;
     setText('#group-system',g.system+'晶系');
     $('#group-title').innerHTML = sf(g.symbol)+' <span class="hm-tag">'+hm(g.hm)+'</span>';
@@ -408,17 +417,33 @@
   const clampElevation = value => Math.min(Math.PI/2,Math.max(-Math.PI/2,value));
   let pointer = null;
   canvas.addEventListener('pointerdown',event=>{
-    pointer = [event.clientX,event.clientY];
+    pointer = {id:event.pointerId,x:event.clientX,y:event.clientY,dragging:false};
     canvas.setPointerCapture(event.pointerId);
   });
   canvas.addEventListener('pointermove',event=>{
-    if (!pointer) return;
-    state.camera.yaw -= (event.clientX-pointer[0])*.009;
-    state.camera.elevation = clampElevation(state.camera.elevation+(event.clientY-pointer[1])*.009);
-    pointer = [event.clientX,event.clientY];
+    if (pointer?.id!==event.pointerId) return;
+    const dx=event.clientX-pointer.x,dy=event.clientY-pointer.y;
+    if (!pointer.dragging&&Math.hypot(dx,dy)<5) return;
+    state.camera.yaw -= dx*.009;
+    state.camera.elevation = clampElevation(state.camera.elevation+dy*.009);
+    Object.assign(pointer,{x:event.clientX,y:event.clientY,dragging:true});
     draw();
   });
-  for (const event of ['pointerup','pointercancel','lostpointercapture']) canvas.addEventListener(event,()=>{ pointer=null; });
+  canvas.addEventListener('pointerup',event=>{
+    if (pointer?.id!==event.pointerId) return;
+    const tap=!pointer.dragging&&Math.hypot(event.clientX-pointer.x,event.clientY-pointer.y)<5;
+    pointer=null;
+    if (!tap) return;
+    const rect=canvas.getBoundingClientRect();
+    const x=event.clientX-rect.left,y=event.clientY-rect.top;
+    const hits=projectedSites.map(([px,py,depth],index)=>({index,depth,gap:Math.hypot(x-px,y-py)}))
+      .filter(hit=>hit.gap<=15).sort((a,b)=>b.depth-a.depth||a.gap-b.gap);
+    if (!hits.length) return;
+    $('#trajectory-site').value=String(hits[0].index);
+    updateTrajectory();
+    draw();
+  });
+  for (const event of ['pointercancel','lostpointercapture']) canvas.addEventListener(event,()=>{ pointer=null; });
   canvas.addEventListener('wheel',event=>{
     event.preventDefault();
     state.camera.zoom = Math.min(1.8,Math.max(.55,state.camera.zoom*Math.exp(-event.deltaY*.001)));

@@ -101,10 +101,11 @@ input[type=search],select { width: 100%; min-width: 0; border: 1px solid #c9d7e8
 .model-description { display: flex; flex-wrap: wrap; align-items: baseline; gap: 3px 12px; padding: 9px 13px; border-bottom: 1px solid #d9e5f3; background: #edf5ff; color: #283f5b; font-size: 12px; }
 .model-description p { flex: 1 1 250px; }
 .model-description a { white-space: nowrap; font-size: 11px; }
-.trajectory-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 5px 9px; padding: 8px 13px; border-bottom: 1px solid #d9e5f3; }
+.trajectory-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 5px 9px; padding: 8px 13px; border-bottom: 1px solid #d9e5f3; background: #f2f7ff; }
 .trajectory-controls label { color: #1e3a63; font-size: 12px; font-weight: 700; }
 .trajectory-controls select { width: auto; max-width: 100%; padding: 4px 6px; font-size: 12px; }
-.trajectory-controls p { color: #4b607c; font-size: 11px; }
+.trajectory-controls button { min-height: 30px; padding: 4px 9px; font-size: 11px; }
+.trajectory-controls p { flex: 1 1 180px; color: #4b607c; font-size: 11px; }
 .scene-bar button { border: 1px solid #7397c26f; border-radius: 4px; color: #dceaff; background: #173763; padding: 4px 7px; font-size: 11px; }
 .scene-bar button + button { margin-left: 4px; }
 .canvas-wrap { position: relative; background: radial-gradient(ellipse at center, #204c83, #0c2348 84%); }
@@ -112,6 +113,9 @@ input[type=search],select { width: 100%; min-width: 0; border: 1px solid #c9d7e8
 #scene:active { cursor: grabbing; }
 .scene-note,.scene-warning { position: absolute; font: 11px/1.5 var(--sans); color: #d6e7ff; background: #0b2147e0; padding: 5px 8px; border-radius: 3px; pointer-events: none; }
 .scene-note { bottom: 10px; left: 10px; }
+.trajectory-key { position: absolute; bottom: 10px; right: 10px; display: flex; align-items: center; gap: 5px; padding: 5px 8px; border-radius: 3px; background: #0b2147e0; color: #ffe2a1; font: 11px/1.5 var(--sans); pointer-events: none; }
+.trajectory-key span { width: 13px; border-top: 2px solid; }
+.trajectory-key span:first-child { border-top-style: dashed; }
 .scene-warning { top: 10px; right: 10px; left: 10px; color: #ffe6a9; }
 .animation-controls { padding: 12px 13px; }
 .control-buttons { display: flex; gap: 8px 10px; align-items: center; flex-wrap: wrap; }

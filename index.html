@@ -7,11 +7,11 @@
   <meta name="description" content="北航物理群论学习站。交互探索 32 个晶体点群、对称操作、表示矩阵、特征标与凝聚态应用。">
   <title>北航物理-群论研究-朱建震</title>
   <link rel="icon" href="assets/beihang.jpg">
-  <link rel="stylesheet" href="styles.css?v=trajectory">
+  <link rel="stylesheet" href="styles.css?v=ball-stick">
   <script defer src="assets/groups.js"></script>
-  <script defer src="scene.js?v=trajectory"></script>
-  <script defer src="models.js?v=structures"></script>
-  <script defer src="app.js?v=trajectory"></script>
+  <script defer src="scene.js?v=ball-stick"></script>
+  <script defer src="models.js?v=ball-stick"></script>
+  <script defer src="app.js?v=ball-stick"></script>
 </head>
 <body id="home">
   <a class="skip" href="#explorer">跳转至点群实验台</a>
@@ -71,20 +71,23 @@
           <div class="viewer-grid">
             <section class="scene-panel card">
               <div class="scene-bar"><div><span class="model-type" id="model-type"></span><strong id="model-name"></strong></div><div><button id="top-view" type="button">俯视 z</button><button id="reset-camera" type="button">重置视角</button></div></div>
+              <div class="trajectory-controls">
+                <label for="trajectory-site">轨迹跟踪</label><select id="trajectory-site"></select><button id="play" type="button" class="button blue">播放预览</button>
+                <p id="trajectory-status" aria-live="polite"></p>
+              </div>
               <div class="canvas-wrap">
                 <canvas id="scene" tabindex="0" role="img" aria-label="可用方向键旋转的三维点群图"></canvas>
-                <p class="scene-note">拖动查看 · 滚轮缩放</p>
+                <p class="scene-note">点球选轨迹 · 拖动查看 · 滚轮缩放</p>
+                <p class="trajectory-key"><span></span>虚线预览 <span></span>实线轨迹</p>
                 <p id="operation-warning" class="scene-warning" hidden>翻转的中间形状用于示意，终点才是对称操作的结果。</p>
               </div>
               <div class="model-description"><p id="model-description"></p><a id="model-source" target="_blank" rel="noopener">结构参考 ↗</a></div>
-              <div class="trajectory-controls"><label for="trajectory-site">轨迹跟踪</label><select id="trajectory-site"></select><p id="trajectory-status"></p></div>
               <div class="animation-controls">
                 <div class="control-buttons">
-                  <button id="play" type="button" class="button blue">重放本次</button>
                   <button id="reset" type="button" class="button subtle">恢复初态</button>
                   <label><input id="from-initial" type="checkbox"> 每次从初态</label>
-                  <label><input id="show-sites" type="checkbox" checked> <span id="site-control-label">标注原子</span></label>
-                  <label><input id="show-reference" type="checkbox" checked> 叠加动画起始轮廓</label>
+                  <label><input id="show-sites" type="checkbox"> <span id="site-control-label">显示原子编号</span></label>
+                  <label><input id="show-reference" type="checkbox"> 叠加动画起始轮廓</label>
                 </div>
                 <div class="scrub-row"><label for="scrub">演示进度</label><input id="scrub" type="range" min="0" max="1" step=".001" value="1"><output id="scrub-output" for="scrub">100%</output></div>
                 <div id="pose-result" class="pose-result"></div>
@@ -139,7 +142,7 @@
             <h4>为什么三维晶体只有 32 个点群？</h4>
             <p>晶格旋转要在晶格基中用整矩阵表示，因此其迹 <span class="math">1 + 2 cos(2π/n)</span> 必须为整数。允许的旋转阶数为 1、2、3、4、6。再按闭包要求组合镜映、反演与旋转，得到七个晶系下的 32 种晶类。</p>
             <h3 id="actions">2. 用结构模型读对称操作</h3>
-            <p>实验台把同一矩阵施加到结构的每个原子或顶点上。例如甲烷沿一根 C–H 键转动 120°，轴上的 H 留在原位，另外三个 H 轮换。操作完成后，同类原子或等价晶面占据的位置与起始结构重合。图中分子采用理想化坐标，晶形按点群构造。<span class="math">det M = +1</span> 保持空间定向，<span class="math">det M = −1</span> 反转定向。翻转动画的中间形状用于示意。</p>
+            <p>实验台把同一矩阵施加到球棍骨架的每个原子或顶点上。例如甲烷沿一根 C–H 键转动 120°，轴上的 H 留在原位，另外三个 H 轮换。操作完成后，同类原子或等价顶点回到起始结构所占据的位置。分子使用理想化坐标，晶体骨架按点群构造，棍线表示骨架边。<span class="math">det M = +1</span> 保持空间定向，<span class="math">det M = −1</span> 反转定向。翻转动画的中间形状用于示意。</p>
             <h3>3. 用生成元构造整个群</h3>
             <p>从恒等操作 E 开始，不断左乘生成元，直到得不到新的矩阵。这一闭包给出全部群元素。以 C₃ᵥ 为例，取 <span class="math">a = C<sub>3</sub></span>、<span class="math">b = σ<sub>v</sub></span>，有 <span class="math">a³ = b² = E</span> 和 <span class="math">bab = a⁻¹</span>。在乘法表中对比 ab 与 ba，可直接检验这两个生成元是否交换。</p>
             <h3 id="representation">4. 从空间变换到不可约表示</h3>

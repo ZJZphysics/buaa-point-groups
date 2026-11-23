@@ -122,23 +122,75 @@ function facetSolid(group, families, name, description) {
     planes,faces,bonds:[],sites:vertices.map(v=>atom('顶点',scale(v,zoom)))};
 }
 
+const twoRings = [polar(.95,.09,.54),polar(.82,.42,-.54)];
+const reflectedRings = [polar(.91,.12,.50),polar(.78,.44,0)];
+const twistedRings = [polar(.95,.22,.52)];
 const crystalModels = {
-  D2: ['正交斜方楔形组合体','沿三个互相垂直方向各有一根二重轴。沿轴转动半圈可比较不同面族的互换。'],
-  C4: ['四方同向斜切柱','斜面绕 z 轴按同一方向重复，构成四重旋转的晶面排列。'],
-  S4: ['四方四角反转晶形','四个斜向面在上下两侧交替出现。绕 z 轴转动四分之一圈再镜映，可复原相同面族。'],
-  C4h: ['四方有底面斜切柱','四重轴垂直于顶、底面。反演配对上下两侧的对应面。'],
-  D4: ['四方旋转斜面组合体','除竖直的四重轴外，还有横向二重轴。沿横轴转动半圈会把上侧晶面移到下侧。'],
-  C3: ['三方同向斜切柱','三个斜面沿 z 轴按 120° 重复，展示三方晶形中的三重轴。'],
-  C3i: ['三方反演斜面组合体','两端各有三组彼此反演的面。选取反演可观察晶面从一端对应到另一端。'],
-  D3: ['三方旋转斜面组合体','z 轴是三重轴，面内的三根二重轴使两端对应。常温 α-石英属于这一点群。'],
-  C6: ['六方同向斜切柱','同向的斜面按 60° 重复，保留 z 轴的六重旋转。'],
-  C6h: ['六方有底面斜切柱','六重轴穿过两端，水平镜映对应同一方位的上下晶面。'],
-  D6: ['六方旋转斜面组合体','z 轴六重旋转和六条面内二重轴共同决定上下两侧的面族排列。高温 β-石英属于这一点群。'],
-  C6v: ['六方锥','六个相同侧面围绕六重轴，轴穿过锥尖和底面中心。六个垂直镜面贯穿锥体。'],
-  T: ['四面体旋转晶形','四面体方向成组出现。三重轴沿体对角线，二重轴沿笛卡尔坐标轴。'],
-  Th: ['黄铁矿式五角十二面体','十二个面为不规则五边形。沿立方体体对角线有三重旋转，原点是反演中心。'],
-  O: ['立方旋转斜切晶形','六个近似方形的轴向区域由带有手性的斜面环绕。可沿面法向四重旋转，或沿体对角线三重旋转。']
+  D2: ['斜方变形四面体','三条相互垂直的二重轴分别穿过相对棱的中点。',[[.89,.55,.43]]],
+  C4: ['错层四边形骨架','两层正方形相对转过一个角度，绕 z 轴 90° 时，每层球点各自轮换。',twoRings],
+  S4: ['交错双层与赤道方环','绕 z 轴转动 90°，再关于 xy 平面镜映，可将上、下两层的球点对换。',[polar(.91,.09,.62),polar(.82,.48,0)]],
+  C4h: ['三层四边形骨架','绕 z 轴转动 90° 可轮换每层球点，水平镜映可交换顶层和底层。',reflectedRings],
+  D4: ['扭转方柱骨架','绕 z 轴转动 90° 可轮换每层球点，绕横向二重轴转动 180° 可交换两层。',twistedRings],
+  C3: ['错层三角形骨架','两层三角形的大小与朝向有所不同。绕 z 轴转动 120° 时，两层分别轮换三个顶点。',twoRings],
+  C3i: ['反演配对的三角层与六元环','反演时，上下三角层互换，中央环的球点也成对交换。',reflectedRings],
+  D3: ['扭转三棱柱骨架','绕 z 轴转动 120° 可轮换每层顶点，绕面内二重轴转动 180° 可交换两层。α-石英属于 D₃。',twistedRings],
+  C6: ['错层六边形骨架','上下两层各有六个顶点，绕 z 轴转动 60° 时，同层顶点依次轮换。',twoRings],
+  C6h: ['三层六边形骨架','绕 z 轴转动 60° 可轮换每层顶点，水平镜映可交换顶层与底层。',reflectedRings],
+  D6: ['扭转六棱柱骨架','z 轴是六重轴，面内二重轴将两层互换。β-石英属于 D₆。',twistedRings],
+  C6v: ['六方锥骨架','六个底部顶点围绕锥尖下方的 z 轴轮换，锥尖始终在轴上。',[[.96,0,-.37],[0,0,1.02]]],
+  T: ['四面体旋转骨架','三重轴沿体对角线，二重轴沿坐标轴。',[[.90,.55,.32]]],
+  Th: ['黄铁矿式五角十二面体骨架','五边形的棱连接成球棍骨架。绕体对角线有三重旋转，原点是反演中心。'],
+  O: ['扭棱立方体骨架','沿坐标轴有四重旋转，沿立方体体对角线有三重旋转。',[[.90,.51,.29]]]
 };
+
+function skeletonBonds(group,sites,layered) {
+  const permutations=group.operations.map(({matrix})=>sites.map(site=>{
+    const p=transform(matrix,site.position);
+    return sites.findIndex(other=>site.kind===other.kind&&distance(p,other.position)<1e-7);
+  }));
+  const bonds=new Map();
+  const components=sites.map((_,i)=>i);
+  function addBond(a,b) {
+    bonds.set(Math.min(a,b)+':'+Math.max(a,b),[a,b]);
+    const old=components[b], replacement=components[a];
+    for(let i=0;i<components.length;i++) if(components[i]===old) components[i]=replacement;
+  }
+  function addOrbit(a,b) {
+    for(const permutation of permutations) addBond(permutation[a],permutation[b]);
+  }
+  const edges=sites.flatMap(({position},a)=>sites.slice(a+1).map((site,i)=>({
+    a,b:a+i+1,length:distance(position,site.position)
+  }))).sort((a,b)=>a.length-b.length);
+  if(layered) {
+    const connectedLayers=new Set();
+    for(const {a,b} of edges) {
+      const p=sites[a],q=sites[b],z=p.position[2];
+      const key=p.kind+':'+z.toFixed(7);
+      if(p.kind===q.kind&&Math.abs(z-q.position[2])<1e-7&&!connectedLayers.has(key)) {
+        addOrbit(a,b);
+        connectedLayers.add(key);
+      }
+    }
+  }
+  for(const {a,b} of edges) {
+    if(sites.length===4||components[a]!==components[b]) addOrbit(a,b);
+  }
+  return [...bonds.values()];
+}
+
+function crystalSkeleton(group,name,description,seeds) {
+  const sites=[];
+  for(const [index,seed] of seeds.entries()) {
+    const kind='顶点'+(index===0?'A':'B');
+    for(const {matrix} of group.operations) {
+      const p=transform(matrix,seed);
+      if(!sites.some(site=>distance(site.position,p)<1e-7)) sites.push(atom(kind,p));
+    }
+  }
+  const layered=!['D2','T','O'].includes(group.symbol);
+  return {name,description,formula:'',category:'理想化晶体骨架',source:crystalSource,
+    sites,bonds:skeletonBonds(group,sites,layered)};
+}
 
 const modelsByGroup = new Map();
 const modelNames = Object.fromEntries([
@@ -156,14 +208,14 @@ function modelFor(group) {
   if (moleculeBuilder) {
     model=moleculeBuilder();
   } else {
-    const closedAxes=identity.flatMap(axis=>[axis,scale(axis,-1)]);
-    const families=[['轴向面',closedAxes],['斜面Ⅰ',[[.34,.61,.72]]],['斜面Ⅱ',[[.79,-.43,.39]]]];
-    const [name,description]=crystalModels[group.symbol];
-    const special={
-      Th:[['五边形晶面',[[1,.5,0]]]],
-      C6v:[['底面',[[0,0,-1]]],['锥面',[[1,0,.47]]]]
-    };
-    model=facetSolid(group,special[group.symbol]??families,name,description.trim());
+    const [name,description,seeds]=crystalModels[group.symbol];
+    if (group.symbol==='Th') {
+      model=facetSolid(group,[['五边形晶面',[[1,.5,0]]]],name,description);
+      model.bonds=modelEdges(model);
+      model.category='理想化晶体骨架';
+    } else {
+      model=crystalSkeleton(group,name,description,seeds);
+    }
     if (['D3','D6'].includes(group.symbol)) model.source='https://journals.iucr.org/j/issues/2022/04/00/te5094/';
     if (group.symbol==='Th') model.source='https://www.iucr.org/who-we-are/commissions/commission-on-crystallographic-nomenclature/published-reports/inorganic';
   }
