@@ -185,6 +185,31 @@ function siteLabel(site,index) {
   return site.kind==='顶点' ? 'V'+(index+1) : site.kind+(index+1);
 }
 
+function siteTrajectory(op,start,progress) {
+  const segments=Math.max(1,Math.ceil(64*progress));
+  const times=Array.from({length:segments+1},(_,i)=>progress*i/segments);
+  // Include the junction between rotation and reflection exactly.
+  if (op.kind==='improper' && progress>.55) {
+    times.splice(times.findIndex(t=>t>.55),0,.55);
+  }
+  return times.map(t=>transform(operationPath(op,t),start));
+}
+
+function drawTrajectory(view,op,start,point,label,progress) {
+  const gold='#ffdc85';
+  const moving=Math.hypot(...transform(op.matrix,start).map((value,i)=>value-start[i]))>1e-7;
+  if (moving && progress>0) {
+    const trail=siteTrajectory(op,start,progress);
+    view.path(trail,'#10233e',5);
+    view.path(trail,gold,2);
+    view.point(start,'#ffdf9cc9',5,false);
+    view.label(start,'起点','#ffedbe',[-24,17],'11px system-ui');
+  }
+  view.point(point,gold,6,false);
+  view.point(point,gold,3,true,true);
+  view.label(point,label,'#ffedbe',[10,-12],'bold 12px system-ui');
+}
+
 function drawStructure(canvas, state, settings) {
   const view = canvasView(canvas, state.camera, .32, [.5,.47]);
   const op = state.group.operations[state.operation];
@@ -240,13 +265,19 @@ function drawStructure(canvas, state, settings) {
   items.sort((a,b)=>a.depth-b.depth).forEach(item=>item.draw());
   if (settings.labels) {
     if (model.formula) {
-      points.forEach((p,i)=>view.label(p,siteLabel(model.sites[i],i),'#fff1d0',[9,-9],'bold 11px system-ui'));
+      points.forEach((p,i)=>{
+        if (i!==state.trackedSite) view.label(p,siteLabel(model.sites[i],i),'#fff1d0',[9,-9],'bold 11px system-ui');
+      });
     } else {
       // Track one complete facet while keeping dense crystal forms readable.
       const tracked=faces.find(face=>face.index===0);
       view.path(tracked.corners,'#ffdb87',2,[],'#ffdb8733');
       view.label(tracked.center,'F1','#fff1ca',[5,-4],'bold 12px system-ui');
     }
+  }
+  if (state.trackedSite!==null) {
+    const index=state.trackedSite, site=model.sites[index];
+    drawTrajectory(view,op,transform(base,site.position),points[index],siteLabel(site,index),state.progress);
   }
 }
 

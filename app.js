@@ -17,7 +17,8 @@
   const cameraDefault = {yaw: .76, elevation: .40, zoom: 1};
   const state = {
     group: null, operation: 0, irrep: 0, start: 0, target: 0,
-    progress: 1, playing: false, raf: 0, model: null, modelEdges: [], moved: 0, camera: {...cameraDefault}
+    progress: 1, playing: false, raf: 0, model: null, modelEdges: [], moved: 0, trackedSite: null,
+    camera: {...cameraDefault}
   };
 
   function real(value) {
@@ -127,10 +128,39 @@
     const turn = '绕轴 '+direction(op.axis)+' 旋转 '+real(op.angle*180/Math.PI)+'°。';
     return op.kind==='improper' ? turn+'并关于垂直于该轴的平面反射。' : turn;
   }
+  function updateTrajectory() {
+    const choice=$('#trajectory-site').value;
+    if (choice==='off') {
+      state.trackedSite=null;
+      setText('#trajectory-status','');
+      return;
+    }
+    const {group,operation,start,model}=state;
+    const op=group.operations[operation], base=group.operations[start].matrix;
+    const displacements=model.sites.map(site=>{
+      const initial=transform(base,site.position);
+      return distance(transform(op.matrix,initial),initial);
+    });
+    const distanceMax=Math.max(...displacements);
+    state.trackedSite=choice==='auto'
+      ? (distanceMax>1e-7?displacements.indexOf(distanceMax):model.sites.findIndex(site=>Math.hypot(...site.position)>1e-7))
+      : Number(choice);
+    const index=state.trackedSite, label=siteLabel(model.sites[index],index);
+    let description='选择右侧操作，观察金色标记。';
+    if (op.kind!=='identity') {
+      if (displacements[index]<=1e-7) description='该位置在本次操作中保持不动。';
+      else if (op.kind==='rotation') description='绕旋转轴移动 '+real(Math.abs(op.angle)*180/Math.PI)+'°，金线随动画绘出。';
+      else if (op.kind==='improper') description='金线先画旋转圆弧，再沿镜面法向移动。';
+      else description='金线连接该位置在翻转前后的位置。';
+    }
+    setText('#trajectory-status',label+' · '+description);
+  }
+
   function updateOperation() {
     const g = state.group, op = g.operations[state.operation];
     const positions=state.model.formula?state.model.sites.map(site=>site.position):state.model.planes.map(plane=>plane.n);
     state.moved=positions.filter(p=>distance(transform(op.matrix,p),p)>1e-7).length;
+    updateTrajectory();
     $('#operation-name').innerHTML = operationName(op.name);
     setText('#operation-detail',opDescription(op)+' 生成元乘积 '+op.word+'。');
     setText('#operation-meta','行列式 '+op.det+' · 阶数 '+op.order+' · 类大小 '+g.classes[op.classId].size);
@@ -249,6 +279,8 @@
     state.model=modelFor(g);
     state.modelEdges=modelEdges(state.model);
     const model=state.model;
+    $('#trajectory-site').innerHTML='<option value="auto">自动选点</option><option value="off">关闭轨迹</option>'+
+      model.sites.map((site,i)=>'<option value="'+i+'">'+siteLabel(site,i)+'</option>').join('');
     setText('#model-name',model.name+(model.formula?' · '+model.formula:''));
     setText('#model-type',model.category);
     setText('#model-description',model.description);
@@ -360,6 +392,7 @@
   $('#top-view').addEventListener('click',()=>{ state.camera.yaw=0; state.camera.elevation=Math.PI/2; draw(); });
   $('#reset-camera').addEventListener('click',()=>{ state.camera={...cameraDefault}; draw(); });
   for (const id of ['#show-sites','#show-reference']) $(id).addEventListener('change',draw);
+  $('#trajectory-site').addEventListener('change',()=>{ updateTrajectory(); draw(); });
   for (const id of ['#product-a','#product-b']) $(id).addEventListener('change',tensorProduct);
   $('#download-group').addEventListener('click',()=>download('point-group-'+state.group.symbol+'.json',JSON.stringify(state.group,null,2),'application/json'));
   $('#download-csv').addEventListener('click',downloadCSV);

@@ -101,6 +101,10 @@ input[type=search],select { width: 100%; min-width: 0; border: 1px solid #c9d7e8
 .model-description { display: flex; flex-wrap: wrap; align-items: baseline; gap: 3px 12px; padding: 9px 13px; border-bottom: 1px solid #d9e5f3; background: #edf5ff; color: #283f5b; font-size: 12px; }
 .model-description p { flex: 1 1 250px; }
 .model-description a { white-space: nowrap; font-size: 11px; }
+.trajectory-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 5px 9px; padding: 8px 13px; border-bottom: 1px solid #d9e5f3; }
+.trajectory-controls label { color: #1e3a63; font-size: 12px; font-weight: 700; }
+.trajectory-controls select { width: auto; max-width: 100%; padding: 4px 6px; font-size: 12px; }
+.trajectory-controls p { color: #4b607c; font-size: 11px; }
 .scene-bar button { border: 1px solid #7397c26f; border-radius: 4px; color: #dceaff; background: #173763; padding: 4px 7px; font-size: 11px; }
 .scene-bar button + button { margin-left: 4px; }
 .canvas-wrap { position: relative; background: radial-gradient(ellipse at center, #204c83, #0c2348 84%); }
