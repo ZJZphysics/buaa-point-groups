@@ -1,7 +1,6 @@
 'use strict';
 
 const identity = [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
-const seedPoints = [[.72, .31, .47], [.17, .61, -.24], [-.29, .13, .78]];
 const dot = (a, b) => a.reduce((sum, v, i) => sum + v * b[i], 0);
 const scale = (v, factor) => v.map(x => x * factor);
 const add = (a, b) => a.map((v, i) => v + b[i]);
@@ -90,7 +89,21 @@ function canvasView(canvas, camera, ratio, center = [.5,.5]) {
     ctx.fillStyle = color;
     ctx.fillText(text, x+offset[0], y+offset[1]);
   }
-  return {project, path, point, label};
+  function sphere(v, color, radius) {
+    const [x,y] = project(v);
+    const highlight = ctx.createRadialGradient(x-radius*.34,y-radius*.39,0,x,y,radius);
+    highlight.addColorStop(0,'#f5faff');
+    highlight.addColorStop(.38,color);
+    highlight.addColorStop(1,'#162843');
+    ctx.beginPath();
+    ctx.arc(x,y,radius,0,2*Math.PI);
+    ctx.fillStyle=highlight;
+    ctx.fill();
+    ctx.strokeStyle=color;
+    ctx.lineWidth=.8;
+    ctx.stroke();
+  }
+  return {project, path, point, label, sphere};
 }
 
 function drawGrid(view, radius, z, step, color) {
@@ -144,14 +157,40 @@ function drawHero() {
   view.label(marker, '90°', '#e7f4ff', [9,1], '12px Consolas');
 }
 
-function drawOrbit(canvas, state, settings) {
-  const view = canvasView(canvas, state.camera, .34, [.5,.48]);
+const elementStyle = {
+  H:['#eaf6ff',8], C:['#8496b2',11], N:['#7ba9ff',13], O:['#ff8278',12],
+  F:['#7de0bc',11], Cl:['#b4df7c',13], Br:['#efa66e',13],
+  B:['#f9b4a6',11], S:['#ffda78',14], Xe:['#c2abff',15]
+};
+const faceColors = {'斜面Ⅰ':'#539dce','斜面Ⅱ':'#6aaaac','轴向面':'#3e638f','配位面':'#528fe5',
+  '底面':'#385d91','锥面':'#5b9de2','五边形晶面':'#d3ad62'};
+
+function faceCenter(points) {
+  return scale(points.reduce(add,[0,0,0]),1/points.length);
+}
+
+function modelEdges(model) {
+  const edges = new Map();
+  for (const {indices} of model.faces) {
+    indices.forEach((a,i)=>{
+      const b=indices[(i+1)%indices.length];
+      edges.set(Math.min(a,b)+':'+Math.max(a,b),[a,b]);
+    });
+  }
+  for (const [a,b] of model.bonds) edges.set(Math.min(a,b)+':'+Math.max(a,b),[a,b]);
+  return [...edges.values()];
+}
+
+function siteLabel(site,index) {
+  return site.kind==='顶点' ? 'V'+(index+1) : site.kind+(index+1);
+}
+
+function drawStructure(canvas, state, settings) {
+  const view = canvasView(canvas, state.camera, .32, [.5,.47]);
   const op = state.group.operations[state.operation];
   const base = state.group.operations[state.start].matrix;
-  const frame = t => multiply(operationPath(op, t), base);
-  const pose = frame(state.progress);
-  drawGrid(view, 1.35, -.87, .27, '#6c97c533');
-  view.path(ring(1.17, -.87), '#8bb4e252', .9, [3,4]);
+  const pose = multiply(operationPath(op,state.progress),base);
+  drawGrid(view, 1.44, -1.24, .36, '#6c97c52a');
   if (op.normal) {
     const normal = op.normal;
     const raw = cross(normal, Math.abs(normal[2]) < .85 ? [0,0,1] : [1,0,0]);
@@ -166,31 +205,49 @@ function drawOrbit(canvas, state, settings) {
     view.path([scale(axis,-1.19),scale(axis,1.33)], '#abc9ef74', .9);
     view.label(scale(axis,1.33), 'xyz'[i]);
   });
-  const pointSets = settings.full ? state.orbit : [seedPoints];
-  const colors = ['#9bd9ff','#e7f2ff','#8ca7ff'];
-  if (settings.reference) pointSets.flat().forEach(point => view.point(point,'#d1e4ff7a',3.3,false));
-  const visible = [];
-  for (const set of pointSets) {
-    const mapped = set.map(point => transform(pose, point));
-    view.path(mapped, '#9cc9fb64', 1);
-    mapped.forEach((point,i) => visible.push({point,color:colors[i]}));
+  const {model}=state;
+  const points=model.sites.map(site=>transform(pose,site.position));
+  if (settings.reference && state.progress>0 && state.progress<1 && op.kind!=='identity') {
+    const fixed=model.sites.map(site=>transform(base,site.position));
+    for (const [a,b] of state.modelEdges) view.path([fixed[a],fixed[b]],'#c0d8fc90',1,[4,4]);
+    for (const point of fixed) view.point(point,'#c0d8fc70',3,false);
   }
-  visible.sort((a,b)=>view.project(a.point)[2]-view.project(b.point)[2]);
-  for (const {point,color} of visible) view.point(point,color,settings.full?3.7:5,true,true);
-  const p = transform(pose,seedPoints[0]);
-  if (state.progress > 0 && op.kind !== 'identity') {
-    const trail = Array.from({length: 33}, (_, i) => transform(frame(state.progress*i/32), seedPoints[0]));
-    view.path(trail, '#ffdb87', 1.3, [3,3]);
+  const depth = point=>view.project(point)[2];
+  const faces=model.faces.map(({indices,kind},index)=>{
+    const corners=indices.map(i=>points[i]);
+    const center=faceCenter(corners);
+    return {corners,center,kind,index};
+  }).sort((a,b)=>depth(a.center)-depth(b.center));
+  for (const {corners,kind} of faces) {
+    const color=faceColors[kind];
+    view.path(corners,color+(model.formula?'83':'e0'),1.25,[],color+(model.formula?'29':'c9'));
   }
-  for (let i=0; i<3; i++) {
-    const arm = add(seedPoints[0], scale(identity[i],.19));
-    view.path([p,transform(pose,arm)], ['#90d6ff','#ffd98c','#9faeff'][i], 1.9);
+  const items=[];
+  for (const [a,b,order] of model.bonds) {
+    const ends=[points[a],points[b]];
+    items.push({depth:depth(faceCenter(ends)),draw:()=>{
+      view.path(ends,'#263e5f',order===2?9:7);
+      view.path(ends,'#adc5dd',order===2?5:3);
+    }});
   }
-  view.point(p,'#0a2148',7);
-  view.point(p,'#ffe4a0',5,true,true);
-  view.label(p,'P','#fff1ca',[9,-7],'bold 13px Georgia');
-  view.point([0,0,0],'#a7c4ec',2.3);
-  return p;
+  if (model.formula) {
+    points.forEach((p,i)=>{
+      const [color,size]=elementStyle[model.sites[i].kind];
+      items.push({depth:depth(p),draw:()=>view.sphere(p,color,
+        size*Math.max(.66,Math.min(1.65,state.camera.zoom))*(1+depth(p)*.11))});
+    });
+  }
+  items.sort((a,b)=>a.depth-b.depth).forEach(item=>item.draw());
+  if (settings.labels) {
+    if (model.formula) {
+      points.forEach((p,i)=>view.label(p,siteLabel(model.sites[i],i),'#fff1d0',[9,-9],'bold 11px system-ui'));
+    } else {
+      // Track one complete facet while keeping dense crystal forms readable.
+      const tracked=faces.find(face=>face.index===0);
+      view.path(tracked.corners,'#ffdb87',2,[],'#ffdb8733');
+      view.label(tracked.center,'F1','#fff1ca',[5,-4],'bold 12px system-ui');
+    }
+  }
 }
 
 new ResizeObserver(drawHero).observe(document.querySelector('#hero-model'));

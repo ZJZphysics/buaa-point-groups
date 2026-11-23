@@ -95,8 +95,12 @@ input[type=search],select { width: 100%; min-width: 0; border: 1px solid #c9d7e8
 .viewer-grid { display: grid; grid-template-columns: minmax(0,1fr) 248px; gap: 14px; }
 .scene-panel,.operation-panel { overflow: hidden; }
 .scene-bar { background: #102c54; color: #eff6ff; min-height: 49px; padding: 8px 14px; display: flex; justify-content: space-between; align-items: center; gap: 8px; border-bottom: 1px solid #8bb8f037; }
-.scene-bar strong { font-size: 13px; white-space: nowrap; }
-.scene-dot { display: inline-block; height: 7px; width: 7px; border-radius: 50%; background: #a8d3ff; margin-right: 5px; box-shadow: 0 0 10px #8bc8ff; }
+.scene-bar strong { display: block; font-size: 14px; line-height: 1.35; }
+.scene-bar > div:last-child { flex-shrink: 0; }
+.model-type { display: block; margin-bottom: 2px; color: #b5d6ff; font-size: 10px; letter-spacing: .08em; }
+.model-description { display: flex; flex-wrap: wrap; align-items: baseline; gap: 3px 12px; padding: 9px 13px; border-bottom: 1px solid #d9e5f3; background: #edf5ff; color: #283f5b; font-size: 12px; }
+.model-description p { flex: 1 1 250px; }
+.model-description a { white-space: nowrap; font-size: 11px; }
 .scene-bar button { border: 1px solid #7397c26f; border-radius: 4px; color: #dceaff; background: #173763; padding: 4px 7px; font-size: 11px; }
 .scene-bar button + button { margin-left: 4px; }
 .canvas-wrap { position: relative; background: radial-gradient(ellipse at center, #204c83, #0c2348 84%); }

@@ -17,7 +17,7 @@
   const cameraDefault = {yaw: .76, elevation: .40, zoom: 1};
   const state = {
     group: null, operation: 0, irrep: 0, start: 0, target: 0,
-    progress: 1, playing: false, raf: 0, orbit: [], camera: {...cameraDefault}
+    progress: 1, playing: false, raf: 0, model: null, modelEdges: [], moved: 0, camera: {...cameraDefault}
   };
 
   function real(value) {
@@ -48,7 +48,8 @@
     const query = normalize($('#group-search').value);
     const system = $('#system-filter').value;
     const visible = groups.filter(group => (!system || system===group.system)
-      && normalize([group.symbol,group.hm,group.system,group.symbol==='C3i'?'S6':''].join(' ')).includes(query));
+      && [group.symbol,group.hm,group.system,group.symbol==='C3i'?'S6':'',
+        modelNames[group.symbol]].some(term=>normalize(term).includes(query)));
     let previous = '';
     $('#group-list').innerHTML = visible.map(group => {
       const heading = previous===group.system ? '' : '<p class="system-heading">'+group.system+'晶系</p>';
@@ -60,12 +61,13 @@
     setText('#search-count', visible.length);
   }
   function draw() {
-    const p = drawOrbit(canvas,state,{full:$('#full-orbit').checked,reference:$('#show-reference').checked});
+    drawStructure(canvas,state,{labels:$('#show-sites').checked,reference:$('#show-reference').checked});
     const complete = state.progress >= 1;
     const op = state.group.operations[complete ? state.target : state.operation];
     $('#pose-result').innerHTML = '<strong>'+(complete?'当前姿态':'演示中')+'</strong> · '+operationName(op.name)+
-      (complete?' · det = '+op.det:'')+'　<span class="math">P = ('+p.map(real).join(', ')+')</span>';
-    canvas.setAttribute('aria-label',state.group.symbol+' 对称操作 '+op.name+'。方向键旋转视角。');
+      (complete?' · det = '+op.det+'<br><span class="muted">'+state.moved+' 个'+
+        (state.model.formula?'原子':'晶面')+'在本次操作中换位</span>':'');
+    canvas.setAttribute('aria-label',state.model.name+'，'+state.group.symbol+'，'+op.name+'。方向键旋转视角。');
     $('#scrub').value = state.progress;
     setText('#scrub-output',Math.round(state.progress*100)+'%');
   }
@@ -127,6 +129,8 @@
   }
   function updateOperation() {
     const g = state.group, op = g.operations[state.operation];
+    const positions=state.model.formula?state.model.sites.map(site=>site.position):state.model.planes.map(plane=>plane.n);
+    state.moved=positions.filter(p=>distance(transform(op.matrix,p),p)>1e-7).length;
     $('#operation-name').innerHTML = operationName(op.name);
     setText('#operation-detail',opDescription(op)+' 生成元乘积 '+op.word+'。');
     setText('#operation-meta','行列式 '+op.det+' · 阶数 '+op.order+' · 类大小 '+g.classes[op.classId].size);
@@ -242,7 +246,14 @@
     stop();
     state.group = g;
     state.irrep = 0;
-    state.orbit = g.operations.map(op=>seedPoints.map(point=>transform(op.matrix,point)));
+    state.model=modelFor(g);
+    state.modelEdges=modelEdges(state.model);
+    const model=state.model;
+    setText('#model-name',model.name+(model.formula?' · '+model.formula:''));
+    setText('#model-type',model.category);
+    setText('#model-description',model.description);
+    setText('#site-control-label',model.formula?'标注原子':'跟踪晶面');
+    $('#model-source').href=model.source;
     setText('#group-system',g.system+'晶系');
     $('#group-title').innerHTML = sf(g.symbol)+' <span class="hm-tag">'+hm(g.hm)+'</span>';
     setText('#group-description','群阶 '+g.order+' · '+g.classes.length+' 个共轭类 · '+g.irreps.length+' 个复不可约表示');
@@ -348,7 +359,7 @@
   });
   $('#top-view').addEventListener('click',()=>{ state.camera.yaw=0; state.camera.elevation=Math.PI/2; draw(); });
   $('#reset-camera').addEventListener('click',()=>{ state.camera={...cameraDefault}; draw(); });
-  for (const id of ['#full-orbit','#show-reference']) $(id).addEventListener('change',draw);
+  for (const id of ['#show-sites','#show-reference']) $(id).addEventListener('change',draw);
   for (const id of ['#product-a','#product-b']) $(id).addEventListener('change',tensorProduct);
   $('#download-group').addEventListener('click',()=>download('point-group-'+state.group.symbol+'.json',JSON.stringify(state.group,null,2),'application/json'));
   $('#download-csv').addEventListener('click',downloadCSV);
